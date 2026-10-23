@@ -1,0 +1,22 @@
+spring:
+  config:
+    activate:
+      on-profile: mysql
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:fraud_detection_db}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql

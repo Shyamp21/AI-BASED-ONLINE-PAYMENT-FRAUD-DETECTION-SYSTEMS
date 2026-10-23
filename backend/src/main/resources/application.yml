@@ -1,0 +1,60 @@
+server:
+  port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: fraud-detection-backend
+  profiles:
+    active: default
+
+  # Default datasource: Embedded H2 database for out-of-the-box local execution
+  # To run with MySQL 8.x, activate the "mysql" profile: --spring.profiles.active=mysql
+  datasource:
+    url: jdbc:h2:mem:frauddetectiondb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# ML Prediction Microservice Configuration
+ml:
+  service:
+    url: ${ML_SERVICE_URL:http://localhost:5001}
+    connect-timeout-ms: 5000
+    read-timeout-ms: 15000
+
+# Security and JWT Configuration
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration-ms: 86400000 # 24 Hours
+
+# OpenAPI / Swagger
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha

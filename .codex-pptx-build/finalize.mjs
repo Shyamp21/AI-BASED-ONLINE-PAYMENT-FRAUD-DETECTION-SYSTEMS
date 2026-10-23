@@ -1,0 +1,10 @@
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+const SKILL_DIR='C:/Users/yadha/.codex/plugins/cache/openai-primary-runtime/presentations/26.1022.11436/skills/presentations';
+const workspaceDir='C:/Users/yadha/Downloads/FraudGuard_AI_Fraud_Detection_System';
+const candidatePath=path.join(workspaceDir,'.codex-pptx-build','FraudGuard_AI_draft.pptx');
+const finalPath=path.join(workspaceDir,'presentation','FraudGuard_AI_Presentation.pptx');
+const pythonExecutable='C:/Users/yadha/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe';
+const {finalizePresentation}=await import(pathToFileURL(path.join(SKILL_DIR,'container_tools/artifact_tool_utils.mjs')).href);
+const result=await finalizePresentation({workspaceDir,candidatePath,finalPath,pythonExecutable,integrityValidatorPath:path.join(SKILL_DIR,'container_tools/inspect_presentation_package_integrity.py'),layoutValidatorPath:path.join(SKILL_DIR,'container_tools/inspect_presentation_layout_geometry.py'),layoutArgs:['--expected-slide-size-emu','12192000,6858000','--validate-bullet-geometry','--validate-heading-fit'],fontPolicy:{basis:'design',families:['Arial']},verifyArtifactToolImport:true,receiptPath:path.join(workspaceDir,'.codex-pptx-build','FraudGuard_AI_Presentation.validation.json')});
+console.log(JSON.stringify(result));

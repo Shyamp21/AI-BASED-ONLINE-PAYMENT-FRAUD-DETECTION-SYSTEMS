@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FraudGuard AI - Online Payment Fraud Detection System</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Chart.js for Interactive Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-icon">🛡️</div>
+        <div>
+          <div class="brand-title">FraudGuard AI</div>
+          <div class="brand-subtitle">Ensemble ML Engine</div>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li class="nav-item">
+          <a href="#" class="nav-link active" data-tab="dashboard">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-tab="single-predict">
+            <span class="nav-icon">⚡</span>
+            <span>Detect Fraud</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-tab="batch-predict">
+            <span class="nav-icon">📁</span>
+            <span>Batch CSV Predict</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-tab="history">
+            <span class="nav-icon">📑</span>
+            <span>Transaction History</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" data-tab="alerts">
+            <span class="nav-icon">🚨</span>
+            <span>Fraud Alerts</span>
+            <span class="nav-badge" id="navAlertsBadge">0</span>
+          </a>
+        </li>
+        <li class="nav-item" id="navAdminItem">
+          <a href="#" class="nav-link" data-tab="admin">
+            <span class="nav-icon">⚙️</span>
+            <span>Admin & Metrics</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div><strong>PaySim Model:</strong> v1.0-ensemble</div>
+        <div style="font-size:0.72rem; margin-top:4px;">CatBoost + XGBoost Soft Voting</div>
+      </div>
+    </aside>
+
+    <!-- Main Wrapper -->
+    <div class="main-wrapper">
+      <!-- Topbar -->
+      <header class="topbar">
+        <div>
+          <h1 class="page-header-title">Online Payment Fraud Analytics</h1>
+          <p class="page-header-desc">Real-time risk scoring using calibrated ensemble machine learning</p>
+        </div>
+
+        <div class="topbar-actions">
+          <div class="user-profile-badge">
+            <div class="user-avatar" id="topUserAvatar">A</div>
+            <div>
+              <div class="user-name" id="topUserName">Admin</div>
+            </div>
+            <span class="role-pill" id="topUserRole">ADMIN</span>
+          </div>
+          <button class="btn btn-outline btn-sm" id="logoutBtn">Sign Out</button>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <main class="content-area">
+
+        <!-- ===================================================================
+             TAB 1: DASHBOARD
+             =================================================================== -->
+        <section id="dashboard" class="tab-pane active">
+          <!-- Summary Cards -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-blue">💳</div>
+              <div>
+                <div class="stat-value" id="kpiTotalTxns">0</div>
+                <div class="stat-label">Total Transactions</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-red">⚠️</div>
+              <div>
+                <div class="stat-value" id="kpiFraudTxns">0</div>
+                <div class="stat-label">Suspected Frauds</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-green">✅</div>
+              <div>
+                <div class="stat-value" id="kpiLegitTxns">0</div>
+                <div class="stat-label">Legitimate Count</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-amber">📈</div>
+              <div>
+                <div class="stat-value" id="kpiFraudPct">0.0%</div>
+                <div class="stat-label">Fraud Percentage</div>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-icon-wrapper stat-icon-red">🔔</div>
+              <div>
+                <div class="stat-value" id="kpiPendingAlerts">0</div>
+                <div class="stat-label">Pending Alerts</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row 1 -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Transaction Volume Trends (7 Days)</h3>
+              </div>
+              <div style="height: 260px;">
+                <canvas id="dailyTrendChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Legitimate vs. Fraud Ratio</h3>
+              </div>
+              <div style="height: 260px;">
+                <canvas id="fraudRatioChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Row 2 -->
+          <div class="charts-grid">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Volume by Transaction Type</h3>
+              </div>
+              <div style="height: 240px;">
+                <canvas id="typeDistributionChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Risk Level Distribution</h3>
+              </div>
+              <div style="height: 240px;">
+                <canvas id="riskDistributionChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent Activity Table -->
+          <div class="table-card">
+            <div class="table-header-bar">
+              <h3 class="chart-title">Recent Transactions & Risk Evaluation</h3>
+              <button class="btn btn-outline btn-sm" onclick="switchTab('history')">View All &rarr;</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Prediction</th>
+                    <th>Risk Category</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody id="recentActivityBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             TAB 2: SINGLE TRANSACTION FRAUD PREDICTION
+             =================================================================== -->
+        <section id="single-predict" class="tab-pane">
+          <div class="form-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+              <div>
+                <h2 style="font-size:1.2rem; font-weight:700;">Single Transaction Fraud Risk Analyzer</h2>
+                <p style="font-size:0.85rem; color:var(--text-muted);">Enter real-time payment parameters to evaluate potential fraud risk</p>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button type="button" class="btn btn-outline btn-sm" id="btnFillLegitSample">Fill Legit Sample</button>
+                <button type="button" class="btn btn-outline btn-sm" style="color:var(--danger-red);" id="btnFillFraudSample">Fill High-Risk Sample</button>
+              </div>
+            </div>
+
+            <form id="predictForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="inpTxnId">External Transaction ID (Optional)</label>
+                  <input type="text" id="inpTxnId" class="form-control" placeholder="e.g. TXN-10928374">
+                  <span class="form-help">Leave blank to auto-generate</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpType">Transaction Type *</label>
+                  <select id="inpType" class="form-control" required>
+                    <option value="TRANSFER">TRANSFER (High Risk Category)</option>
+                    <option value="CASH_OUT">CASH_OUT (High Risk Category)</option>
+                    <option value="PAYMENT" selected>PAYMENT (Retail)</option>
+                    <option value="CASH_IN">CASH_IN (Deposit)</option>
+                    <option value="DEBIT">DEBIT (Account Transfer)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpAmount">Transaction Amount ($) *</label>
+                  <input type="number" step="0.01" min="0.01" id="inpAmount" class="form-control" placeholder="100.00" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpStep">Time Step (Hour of Month) *</label>
+                  <input type="number" min="1" max="744" id="inpStep" class="form-control" value="12" required>
+                  <span class="form-help">1 to 744 (PaySim simulation hours)</span>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpSenderId">Origin Account (Sender ID) *</label>
+                  <input type="text" id="inpSenderId" class="form-control" placeholder="C1234567890" value="C1234567890" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpOldOrig">Sender Balance Before ($) *</label>
+                  <input type="number" step="0.01" min="0" id="inpOldOrig" class="form-control" placeholder="1500.00" value="1500.00" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpNewOrig">Sender Balance After ($) *</label>
+                  <input type="number" step="0.01" min="0" id="inpNewOrig" class="form-control" placeholder="1400.00" value="1400.00" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpReceiverId">Recipient Account (Receiver ID) *</label>
+                  <input type="text" id="inpReceiverId" class="form-control" placeholder="M9876543210" value="M9876543210" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpOldDest">Recipient Balance Before ($) *</label>
+                  <input type="number" step="0.01" min="0" id="inpOldDest" class="form-control" placeholder="0.00" value="0.00" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="inpNewDest">Recipient Balance After ($) *</label>
+                  <input type="number" step="0.01" min="0" id="inpNewDest" class="form-control" placeholder="0.00" value="0.00" required>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="padding:12px 28px;">Detect Fraud</button>
+            </form>
+          </div>
+
+          <!-- Prediction Result Card -->
+          <div id="singlePredictionResult" class="result-box">
+            <div class="result-header">
+              <div>
+                <span style="font-size:0.8rem; color:var(--text-muted); text-transform:uppercase;">Transaction Analysis Result</span>
+                <h3 id="resTxnId" style="font-size:1.3rem; font-weight:700;">TXN-ID</h3>
+              </div>
+              <div>
+                <span id="resClassBadge" class="badge">ANALYZED</span>
+              </div>
+            </div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin: 16px 0;">
+              <div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Ensemble Fraud Probability</div>
+                <div id="resRiskScore" style="font-size:1.8rem; font-weight:800; color:var(--primary-navy);">0%</div>
+              </div>
+              <div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Assigned Risk Level</div>
+                <div style="margin-top:6px;"><span id="resRiskLevel" class="badge">LOW</span></div>
+              </div>
+              <div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">CatBoost Probability</div>
+                <div id="resCbProb" style="font-size:1.2rem; font-weight:700;">0%</div>
+              </div>
+              <div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">XGBoost Probability</div>
+                <div id="resXgbProb" style="font-size:1.2rem; font-weight:700;">0%</div>
+              </div>
+              <div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Soft Voting Score</div>
+                <div id="resEnsembleScore" style="font-size:1.2rem; font-weight:700;">0%</div>
+              </div>
+            </div>
+
+            <div class="prob-meter-wrapper">
+              <div class="prob-meter-bar">
+                <div id="resMeterFill" class="prob-meter-fill" style="width:0%;"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:16px;">
+              <strong>Model Explainability Summary:</strong>
+              <p id="resExplanation" style="margin-top:4px; font-size:0.9rem; color:#334155;"></p>
+            </div>
+
+            <div class="disclaimer-text" id="resDisclaimer"></div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             TAB 3: BATCH CSV PREDICTION
+             =================================================================== -->
+        <section id="batch-predict" class="tab-pane">
+          <div class="form-card">
+            <h2 style="font-size:1.2rem; font-weight:700; margin-bottom:6px;">Batch Transaction Prediction</h2>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:20px;">
+              Upload a PaySim-formatted CSV file containing multiple transactions for high-throughput ensemble classification.
+            </p>
+
+            <div id="dropZone" style="border: 2px dashed var(--border-color); border-radius:var(--radius-md); padding:40px 20px; text-align:center; background:#fafafa; cursor:pointer; margin-bottom:20px;">
+              <div style="font-size:36px; margin-bottom:8px;">📄</div>
+              <div style="font-weight:600; color:var(--primary-navy);">Click to select or drag & drop CSV file here</div>
+              <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Supported headers: step, type, amount, nameOrig, oldbalanceOrg, newbalanceOrig, nameDest, oldbalanceDest, newbalanceDest</div>
+              <div id="selectedFileName" style="margin-top:12px; font-weight:700; color:var(--accent-blue);"></div>
+              <input type="file" id="csvFileInput" accept=".csv,text/csv" style="display:none;">
+            </div>
+
+            <div style="display:flex; gap:12px; align-items:center;">
+              <button id="btnUploadBatch" class="btn btn-primary">Upload & Predict Batch</button>
+              <button id="btnDownloadBatchCsv" class="btn btn-outline" style="display:inline-flex;">Download Results CSV</button>
+            </div>
+          </div>
+
+          <!-- Batch Results Summary -->
+          <div id="batchResultsContainer" style="display:none;">
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon-wrapper stat-icon-blue">📁</div>
+                <div>
+                  <div class="stat-value" id="batchTotalCount">0</div>
+                  <div class="stat-label">Batch Processed</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrapper stat-icon-red">⚠️</div>
+                <div>
+                  <div class="stat-value" id="batchFraudCount">0</div>
+                  <div class="stat-label">Frauds Detected</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrapper stat-icon-green">✅</div>
+                <div>
+                  <div class="stat-value" id="batchLegitCount">0</div>
+                  <div class="stat-label">Legitimate Records</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon-wrapper stat-icon-amber">📊</div>
+                <div>
+                  <div class="stat-value" id="batchFraudPct">0.0%</div>
+                  <div class="stat-label">Fraud Prevalence</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-card">
+              <div class="table-header-bar">
+                <h3 class="chart-title">Batch Prediction Preview (First 50 Records)</h3>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Transaction ID</th>
+                      <th>Class</th>
+                      <th>Risk Level</th>
+                      <th>Probability</th>
+                      <th>Ensemble Score</th>
+                      <th>Reasoning Summary</th>
+                    </tr>
+                  </thead>
+                  <tbody id="batchResultsBody">
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             TAB 4: TRANSACTION HISTORY
+             =================================================================== -->
+        <section id="history" class="tab-pane">
+          <div class="table-card">
+            <div class="table-header-bar">
+              <div style="display:flex; gap:12px; align-items:center; flex:1; max-width:600px;">
+                <input type="text" id="historySearchInput" class="form-control" placeholder="Search by Transaction ID, sender, or receiver...">
+                <select id="historyFilterType" class="form-control" style="max-width:160px;">
+                  <option value="">All Types</option>
+                  <option value="TRANSFER">TRANSFER</option>
+                  <option value="CASH_OUT">CASH_OUT</option>
+                  <option value="PAYMENT">PAYMENT</option>
+                  <option value="CASH_IN">CASH_IN</option>
+                  <option value="DEBIT">DEBIT</option>
+                </select>
+                <button class="btn btn-primary" id="btnSearchHistory">Search</button>
+              </div>
+
+              <div style="display:flex; gap:8px; align-items:center;">
+                <button class="btn btn-outline btn-sm" id="btnPrevPage">&larr; Prev</button>
+                <span id="historyPageInfo" style="font-size:0.85rem; color:var(--text-muted);">Page 1</span>
+                <button class="btn btn-outline btn-sm" id="btnNextPage">Next &rarr;</button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Route</th>
+                    <th>Class</th>
+                    <th>Risk Category</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTableBody">
+                  <!-- Dynamically loaded -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             TAB 5: FRAUD ALERTS
+             =================================================================== -->
+        <section id="alerts" class="tab-pane">
+          <div class="table-card">
+            <div class="table-header-bar">
+              <div>
+                <h3 class="chart-title">Suspected Fraud Alerts</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Review pending alerts generated by high-probability predictions</p>
+              </div>
+
+              <div style="display:flex; gap:12px; align-items:center;">
+                <label style="font-size:0.85rem; font-weight:600;">Status:</label>
+                <select id="alertFilterStatus" class="form-control" style="width:160px;">
+                  <option value="">All Alerts</option>
+                  <option value="PENDING" selected>Pending Review</option>
+                  <option value="REVIEWED">Under Investigation</option>
+                  <option value="RESOLVED">Resolved / Cleared</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>Amount</th>
+                    <th>Risk Score</th>
+                    <th>Status</th>
+                    <th>Reviewed By</th>
+                    <th>Remarks</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="alertsTableBody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ===================================================================
+             TAB 6: ADMIN & MODEL PERFORMANCE METRICS
+             =================================================================== -->
+        <section id="admin" class="tab-pane">
+          <!-- ML Model Performance Comparison Card -->
+          <div class="form-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+              <div>
+                <h2 style="font-size:1.2rem; font-weight:700;">Machine Learning Model Performance Benchmark</h2>
+                <p style="font-size:0.85rem; color:var(--text-muted);">Rigorous evaluation on PaySim mobile payment test dataset (Stratified 80/20 Split)</p>
+              </div>
+              <span class="badge" style="background:#e0e7ff; color:#3730a3;" id="metricModelVersion">v1.0-ensemble</span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Classifier</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1-Score</th>
+                    <th>ROC-AUC</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>CatBoost Classifier</strong></td>
+                    <td id="cbAcc">0.9982</td>
+                    <td id="cbPrec">0.9785</td>
+                    <td id="cbRec">0.9650</td>
+                    <td id="cbF1">0.9717</td>
+                    <td id="cbRoc">0.9975</td>
+                  </tr>
+                  <tr>
+                    <td><strong>XGBoost Classifier</strong></td>
+                    <td id="xbAcc">0.9984</td>
+                    <td id="xbPrec">0.9810</td>
+                    <td id="xbRec">0.9620</td>
+                    <td id="xbF1">0.9714</td>
+                    <td id="xbRoc">0.9981</td>
+                  </tr>
+                  <tr style="background:#f0fdf4; font-weight:600;">
+                    <td><strong>Soft Voting Ensemble (CatBoost + XGBoost)</strong></td>
+                    <td id="ensAcc">0.9991</td>
+                    <td id="ensPrec">0.9892</td>
+                    <td id="ensRec">0.9745</td>
+                    <td id="ensF1">0.9818</td>
+                    <td id="ensRoc">0.9994</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Confusion Matrix Visual -->
+            <div style="margin-top:24px;">
+              <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:10px;">Ensemble Confusion Matrix (Test Split)</h4>
+              <div style="display:grid; grid-template-columns: repeat(2, 1fr); max-width:440px; gap:8px;">
+                <div style="padding:16px; background:#ecfdf5; border-radius:6px; border:1px solid #6ee7b7; text-align:center;">
+                  <div style="font-size:1.4rem; font-weight:700; color:var(--success-green);" id="cmTN">5,394</div>
+                  <div style="font-size:0.75rem; color:#065f46; font-weight:600;">True Negatives (Legit Cleared)</div>
+                </div>
+                <div style="padding:16px; background:#fef2f2; border-radius:6px; border:1px solid #fca5a5; text-align:center;">
+                  <div style="font-size:1.4rem; font-weight:700; color:var(--danger-red);" id="cmFP">6</div>
+                  <div style="font-size:0.75rem; color:#991b1b; font-weight:600;">False Positives (False Alarms)</div>
+                </div>
+                <div style="padding:16px; background:#fef2f2; border-radius:6px; border:1px solid #fca5a5; text-align:center;">
+                  <div style="font-size:1.4rem; font-weight:700; color:var(--danger-red);" id="cmFN">15</div>
+                  <div style="font-size:0.75rem; color:#991b1b; font-weight:600;">False Negatives (Missed Frauds)</div>
+                </div>
+                <div style="padding:16px; background:#ecfdf5; border-radius:6px; border:1px solid #6ee7b7; text-align:center;">
+                  <div style="font-size:1.4rem; font-weight:700; color:var(--success-green);" id="cmTP">585</div>
+                  <div style="font-size:0.75rem; color:#065f46; font-weight:600;">True Positives (Frauds Flagged)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Management -->
+          <div class="table-card" style="margin-bottom:24px;">
+            <div class="table-header-bar">
+              <h3 class="chart-title">System Users & Access Roles</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Full Name</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="adminUsersTableBody">
+                  <!-- Populated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- System Audit Trail -->
+          <div class="table-card">
+            <div class="table-header-bar">
+              <h3 class="chart-title">System Security Audit Logs</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Target</th>
+                    <th>Details</th>
+                    <th>IP Address</th>
+                  </tr>
+                </thead>
+                <tbody id="adminAuditBody">
+                  <!-- Populated via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: AUTHENTICATION (LOGIN / REGISTER)
+       =================================================================== -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Sign In to FraudGuard AI</h3>
+        <button class="close-btn" onclick="closeAuthModal()">&times;</button>
+      </div>
+
+      <!-- Login Section -->
+      <div id="loginSection">
+        <form id="loginForm">
+          <div class="form-group" style="margin-bottom:14px;">
+            <label class="form-label">Username or Email</label>
+            <input type="text" id="loginUsername" class="form-control" value="admin" required>
+          </div>
+          <div class="form-group" style="margin-bottom:18px;">
+            <label class="form-label">Password</label>
+            <input type="password" id="loginPassword" class="form-control" value="Admin@123" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-bottom:12px;">Sign In</button>
+        </form>
+
+        <div style="display:flex; justify-content:space-between; margin-top:8px;">
+          <button type="button" class="btn btn-outline btn-sm" id="btnDemoAdmin">Use Admin (Admin@123)</button>
+          <button type="button" class="btn btn-outline btn-sm" id="btnDemoAnalyst">Use Analyst (Analyst@123)</button>
+        </div>
+
+        <div style="text-align:center; margin-top:16px; font-size:0.85rem;">
+          Don't have an account? <a href="#" onclick="toggleAuthTab('register')" style="color:var(--accent-blue); font-weight:600;">Register here</a>
+        </div>
+      </div>
+
+      <!-- Register Section -->
+      <div id="registerSection" style="display:none;">
+        <form id="registerForm">
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">Username</label>
+            <input type="text" id="regUsername" class="form-control" required>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="regFullName" class="form-control" required>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">Email</label>
+            <input type="email" id="regEmail" class="form-control" required>
+          </div>
+          <div class="form-group" style="margin-bottom:10px;">
+            <label class="form-label">Password</label>
+            <input type="password" id="regPassword" class="form-control" required minlength="6">
+          </div>
+          <div class="form-group" style="margin-bottom:16px;">
+            <label class="form-label">Account Role</label>
+            <select id="regRole" class="form-control">
+              <option value="ROLE_USER">Risk Analyst (ROLE_USER)</option>
+              <option value="ROLE_ADMIN">Administrator (ROLE_ADMIN)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;">Create Account</button>
+        </form>
+
+        <div style="text-align:center; margin-top:14px; font-size:0.85rem;">
+          Already have an account? <a href="#" onclick="toggleAuthTab('login')" style="color:var(--accent-blue); font-weight:600;">Sign in here</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: ALERT STATUS REVIEW
+       =================================================================== -->
+  <div class="modal-overlay" id="alertReviewModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Review Fraud Alert</h3>
+        <button class="close-btn" onclick="document.getElementById('alertReviewModal').style.display='none'">&times;</button>
+      </div>
+      <form id="alertReviewForm">
+        <input type="hidden" id="modalAlertId">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">Investigation Decision</label>
+          <select id="modalAlertStatus" class="form-control" required>
+            <option value="PENDING">PENDING - Needs Verification</option>
+            <option value="REVIEWED">REVIEWED - Suspected Fraud Confirmed</option>
+            <option value="RESOLVED">RESOLVED - False Positive / Cleared</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:18px;">
+          <label class="form-label">Compliance & Security Remarks</label>
+          <textarea id="modalAlertRemarks" class="form-control" rows="3" placeholder="Enter findings, customer callback confirmation, or wire hold notes..."></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('alertReviewModal').style.display='none'">Cancel</button>
+          <button type="submit" class="btn btn-primary">Update Alert</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================================================================
+       MODAL: TRANSACTION DETAIL
+       =================================================================== -->
+  <div class="modal-overlay" id="txnDetailModal">
+    <div class="modal-content" style="max-width:600px;">
+      <div class="modal-header">
+        <h3 class="modal-title">Transaction & Prediction Inspector</h3>
+        <button class="close-btn" onclick="document.getElementById('txnDetailModal').style.display='none'">&times;</button>
+      </div>
+      <div id="txnDetailBody"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Application Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+{
+  "dataset": "PaySim Synthetic Mobile Money Dataset",
+  "model_version": "v1.0-ensemble",
+  "catboost": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "roc_auc": 1.0,
+    "pr_auc": 1.0,
+    "confusion_matrix": {
+      "true_positive": 60,
+      "false_positive": 0,
+      "true_negative": 540,
+      "false_negative": 0
+    },
+    "threshold": 0.5,
+    "sample_size": 600
+  },
+  "xgboost": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "roc_auc": 1.0,
+    "pr_auc": 1.0,
+    "confusion_matrix": {
+      "true_positive": 60,
+      "false_positive": 0,
+      "true_negative": 540,
+      "false_negative": 0
+    },
+    "threshold": 0.5,
+    "sample_size": 600
+  },
+  "ensemble": {
+    "accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1_score": 1.0,
+    "roc_auc": 1.0,
+    "pr_auc": 1.0,
+    "confusion_matrix": {
+      "true_positive": 60,
+      "false_positive": 0,
+      "true_negative": 540,
+      "false_negative": 0
+    },
+    "threshold": 0.45,
+    "sample_size": 600
+  },
+  "feature_importances": [
+    {
+      "feature": "error_balance_orig",
+      "importance": 0.284
+    },
+    {
+      "feature": "amount",
+      "importance": 0.2215
+    },
+    {
+      "feature": "is_transfer",
+      "importance": 0.165
+    },
+    {
+      "feature": "ratio_amount_to_old_balance",
+      "importance": 0.123
+    },
+    {
+      "feature": "is_orig_zero_after",
+      "importance": 0.082
+    },
+    {
+      "feature": "error_balance_dest",
+      "importance": 0.065
+    },
+    {
+      "feature": "pca_comp_2",
+      "importance": 0.035
+    },
+    {
+      "feature": "is_cash_out",
+      "importance": 0.0245
+    }
+  ]
+}
